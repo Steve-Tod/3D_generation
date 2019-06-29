@@ -1,0 +1,29 @@
+{
+  "gpu_ids": [5]
+  , "data": {
+    "data_root": "/home/stevetod/jzy/projects/latent_3d_points/data/shape_net_core_uniform_samples_2048"
+    , "class_name": "chair"
+    , "n_thread": 20
+  }
+  , "model": {
+    "type": "ae"
+    , "num_points": 2048
+    , "bneck_size": 128
+  }
+  , "train": {
+    "ae_loss": "chamfer"
+    , "batch_size": 400
+    , "training_epochs": 500
+    , "denoising": false
+    , "learning_rate": 0.0005
+    , "z_rotate": false
+    , "saver_step": 10
+    , "loss_display_step": 10
+    , "resume": true
+    , "restore_epoch": 500
+  }
+  , "path": {
+    "train_root": "./experiments"
+    , "experiment_name": "single_class_ae"
+  }
+}
