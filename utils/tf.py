@@ -37,8 +37,8 @@ def reset_tf_graph():
     if 'sess' in globals() and sess:
         sess.close()
     tf.reset_default_graph()
-    
-    
+
+
 def leaky_relu(alpha):
     if not (alpha < 1 and alpha > 0):
         raise ValueError()

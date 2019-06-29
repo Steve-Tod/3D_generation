@@ -1,19 +1,20 @@
 import argparse
 import numpy as np
 from numpy.linalg import norm
-import matplotlib.pylab  as plt
+import matplotlib.pylab as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
 def get_args():
     argparser = argparse.ArgumentParser(description=__doc__)
-    argparser.add_argument(
-        '-c', '--config',
-        metavar='C',
-        default='None',
-        help='The Configuration file')
+    argparser.add_argument('-c',
+                           '--config',
+                           metavar='C',
+                           default='None',
+                           help='The Configuration file')
     args = argparser.parse_args()
     return args
+
 
 def iterate_in_chunks(l, n):
     '''Yield successive 'n'-sized chunks from iterable 'l'.
@@ -21,6 +22,7 @@ def iterate_in_chunks(l, n):
     '''
     for i in xrange(0, len(l), n):
         yield l[i:i + n]
+
 
 def add_gaussian_noise_to_pcloud(pcloud, mu=0, sigma=1):
     gnoise = np.random.normal(mu, sigma, pcloud.shape[0])
@@ -48,6 +50,7 @@ def apply_augmentations(batch, conf):
         batch = batch.dot(r_rotation)
     return batch
 
+
 def rand_rotation_matrix(deflection=1.0, seed=None):
     '''Creates a random rotation matrix.
 
@@ -60,13 +63,13 @@ def rand_rotation_matrix(deflection=1.0, seed=None):
     if seed is not None:
         np.random.seed(seed)
 
-    randnums = np.random.uniform(size=(3,))
+    randnums = np.random.uniform(size=(3, ))
 
     theta, phi, z = randnums
 
-    theta = theta * 2.0 * deflection * np.pi    # Rotation about the pole (Z).
-    phi = phi * 2.0 * np.pi     # For direction of pole deflection.
-    z = z * 2.0 * deflection    # For magnitude of pole deflection.
+    theta = theta * 2.0 * deflection * np.pi  # Rotation about the pole (Z).
+    phi = phi * 2.0 * np.pi  # For direction of pole deflection.
+    z = z * 2.0 * deflection  # For magnitude of pole deflection.
 
     # Compute a vector V used for distributing points over the sphere
     # via the reflection I - V Transpose(V).  This formulation of V
@@ -75,10 +78,7 @@ def rand_rotation_matrix(deflection=1.0, seed=None):
     # has length sqrt(2) to eliminate the 2 in the Householder matrix.
 
     r = np.sqrt(z)
-    V = (
-        np.sin(phi) * r,
-        np.cos(phi) * r,
-        np.sqrt(2.0 - z))
+    V = (np.sin(phi) * r, np.cos(phi) * r, np.sqrt(2.0 - z))
 
     st = np.sin(theta)
     ct = np.cos(theta)
@@ -89,11 +89,27 @@ def rand_rotation_matrix(deflection=1.0, seed=None):
     M = (np.outer(V, V) - np.eye(3)).dot(R)
     return M
 
-def plot_3d_point_cloud(x, y, z, show=True, show_axis=True, in_u_sphere=False, marker='.', s=8, alpha=.8, figsize=(5, 5), elev=10, azim=240, axis=None, title=None, *args, **kwargs):
+
+def plot_3d_point_cloud(x,
+                        y,
+                        z,
+                        show=True,
+                        show_axis=True,
+                        in_u_sphere=False,
+                        marker='.',
+                        s=8,
+                        alpha=.8,
+                        figsize=(5, 5),
+                        elev=10,
+                        azim=240,
+                        axis=None,
+                        title=None,
+                        *args,
+                        **kwargs):
 
     if axis is None:
         fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(111, projection='3d')        
+        ax = fig.add_subplot(111, projection='3d')
     else:
         ax = axis
         fig = axis
@@ -109,7 +125,9 @@ def plot_3d_point_cloud(x, y, z, show=True, show_axis=True, in_u_sphere=False, m
         ax.set_ylim3d(-0.5, 0.5)
         ax.set_zlim3d(-0.5, 0.5)
     else:
-        miv = 0.7 * np.min([np.min(x), np.min(y), np.min(z)])  # Multiply with 0.7 to squeeze free-space.
+        miv = 0.7 * np.min([np.min(x), np.min(y),
+                            np.min(z)
+                            ])  # Multiply with 0.7 to squeeze free-space.
         mav = 0.7 * np.max([np.max(x), np.max(y), np.max(z)])
         ax.set_xlim(miv, mav)
         ax.set_ylim(miv, mav)

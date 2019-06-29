@@ -13,17 +13,19 @@ from tflearn import is_training
 
 from utils.dirs import create_dir, pickle_data, unpickle_data
 from utils.utils import apply_augmentations, iterate_in_chunks
-from . neural_net import Neural_Net, MODEL_SAVER_ID
+from .neural_net import Neural_Net, MODEL_SAVER_ID
+
 
 def default_train_params(single_class=True):
-    params = {'batch_size': 50,
-              'training_epochs': 500,
-              'denoising': False,
-              'learning_rate': 0.0005,
-              'z_rotate': False,
-              'saver_step': 10,
-              'loss_display_step': 1
-              }
+    params = {
+        'batch_size': 50,
+        'training_epochs': 500,
+        'denoising': False,
+        'learning_rate': 0.0005,
+        'z_rotate': False,
+        'saver_step': 10,
+        'loss_display_step': 1
+    }
 
     if not single_class:
         params['z_rotate'] = True
@@ -31,12 +33,31 @@ def default_train_params(single_class=True):
 
     return params
 
+
 class Configuration():
-    def __init__(self, n_input, encoder, decoder, encoder_args={}, decoder_args={},
-                 training_epochs=200, batch_size=10, learning_rate=0.001, summary_step=10,
-                 denoising=False, saver_step=None, train_dir=None, z_rotate=False, loss='chamfer', 
-                 gauss_augment=None, saver_max_to_keep=None, loss_display_step=1, debug=False,
-                 n_z=None, n_output=None, latent_vs_recon=0.001, consistent_io=None):
+    def __init__(self,
+                 n_input,
+                 encoder,
+                 decoder,
+                 encoder_args={},
+                 decoder_args={},
+                 training_epochs=200,
+                 batch_size=10,
+                 learning_rate=0.001,
+                 summary_step=10,
+                 denoising=False,
+                 saver_step=None,
+                 train_dir=None,
+                 z_rotate=False,
+                 loss='chamfer',
+                 gauss_augment=None,
+                 saver_max_to_keep=None,
+                 loss_display_step=1,
+                 debug=False,
+                 n_z=None,
+                 n_output=None,
+                 latent_vs_recon=0.001,
+                 consistent_io=None):
 
         # Parameters for any AE
         self.n_input = n_input
@@ -74,7 +95,8 @@ class Configuration():
         self.consistent_io = consistent_io
 
     def exists_and_is_not_none(self, attribute):
-        return hasattr(self, attribute) and getattr(self, attribute) is not None
+        return hasattr(self,
+                       attribute) and getattr(self, attribute) is not None
 
     def __str__(self):
         keys = list(self.__dict__.keys())
@@ -118,7 +140,7 @@ class AutoEncoder(Neural_Net):
                 self.gt = tf.placeholder(tf.float32, out_shape)
             else:
                 self.gt = self.x
-   
+
     def partial_fit(self, X, GT=None, need_summary=False):
         '''Trains the model with mini-batches of input data.
         If GT is not None, then the reconstruction loss compares the output of the net that is fed X, with the GT.
@@ -130,16 +152,25 @@ class AutoEncoder(Neural_Net):
         is_training(True, session=self.sess)
         try:
             if GT is not None:
-                _, loss, recon, summary = self.sess.run((self.train_step, self.loss, self.x_reconstr, self.merged_summaries), feed_dict={self.x: X, self.gt: GT})
+                _, loss, recon, summary = self.sess.run(
+                    (self.train_step, self.loss, self.x_reconstr,
+                     self.merged_summaries),
+                    feed_dict={
+                        self.x: X,
+                        self.gt: GT
+                    })
             else:
-                _, loss, recon, summary = self.sess.run((self.train_step, self.loss, self.x_reconstr, self.merged_summaries), feed_dict={self.x: X})
-                
+                _, loss, recon, summary = self.sess.run(
+                    (self.train_step, self.loss, self.x_reconstr,
+                     self.merged_summaries),
+                    feed_dict={self.x: X})
+
             is_training(False, session=self.sess)
         except Exception:
             raise
         finally:
             is_training(False, session=self.sess)
-            
+
         if need_summary:
             return recon, loss, summary
         else:
@@ -154,9 +185,14 @@ class AutoEncoder(Neural_Net):
             loss = self.no_op
 
         if GT is None:
-            return self.sess.run((self.x_reconstr, loss), feed_dict={self.x: X})
+            return self.sess.run((self.x_reconstr, loss),
+                                 feed_dict={self.x: X})
         else:
-            return self.sess.run((self.x_reconstr, loss), feed_dict={self.x: X, self.gt: GT})
+            return self.sess.run((self.x_reconstr, loss),
+                                 feed_dict={
+                                     self.x: X,
+                                     self.gt: GT
+                                 })
 
     def transform(self, X):
         '''Transform data by mapping it into the latent space.'''
@@ -180,7 +216,11 @@ class AutoEncoder(Neural_Net):
             z = np.expand_dims(z, 0)
         return self.sess.run((self.x_reconstr), {self.z: z})
 
-    def train(self, train_data, configuration, log_file=None, held_out_data=None):
+    def train(self,
+              train_data,
+              configuration,
+              log_file=None,
+              held_out_data=None):
         c = configuration
         stats = []
 
@@ -193,24 +233,37 @@ class AutoEncoder(Neural_Net):
             stats.append((epoch, loss, duration))
 
             if epoch % c.loss_display_step == 0:
-                print("Epoch:", '%04d' % (epoch), 'training time (minutes)=', "{:.4f}".format(duration / 60.0), "loss=", "{:.9f}".format(loss))
+                print("Epoch:", '%04d' % (epoch), 'training time (minutes)=',
+                      "{:.4f}".format(duration / 60.0), "loss=",
+                      "{:.9f}".format(loss))
                 if log_file is not None:
-                    log_file.write('%04d\t%.9f\t%.4f\n' % (epoch, loss, duration / 60.0))
+                    log_file.write('%04d\t%.9f\t%.4f\n' %
+                                   (epoch, loss, duration / 60.0))
 
             # Save the models checkpoint periodically.
-            if c.saver_step is not None and (epoch % c.saver_step == 0 or epoch - 1 == 0):
+            if c.saver_step is not None and (epoch % c.saver_step == 0
+                                             or epoch - 1 == 0):
                 checkpoint_path = osp.join(c.save_dir, MODEL_SAVER_ID)
-                self.saver.save(self.sess, checkpoint_path, global_step=self.epoch)
+                self.saver.save(self.sess,
+                                checkpoint_path,
+                                global_step=self.epoch)
 
-            if c.exists_and_is_not_none('summary_step') and (epoch % c.summary_step == 0 or epoch - 1 == 0):
+            if c.exists_and_is_not_none('summary_step') and (
+                    epoch % c.summary_step == 0 or epoch - 1 == 0):
                 summary = self.sess.run(self.merged_summaries)
                 self.train_writer.add_summary(summary, epoch)
 
-            if held_out_data is not None and c.exists_and_is_not_none('held_out_step') and (epoch % c.held_out_step == 0):
-                loss, duration = self._single_epoch_train(held_out_data, c, only_fw=True)
-                print("Held Out Data :", 'forward time (minutes)=', "{:.4f}".format(duration / 60.0), "loss=", "{:.9f}".format(loss))
+            if held_out_data is not None and c.exists_and_is_not_none(
+                    'held_out_step') and (epoch % c.held_out_step == 0):
+                loss, duration = self._single_epoch_train(held_out_data,
+                                                          c,
+                                                          only_fw=True)
+                print("Held Out Data :", 'forward time (minutes)=',
+                      "{:.4f}".format(duration / 60.0), "loss=",
+                      "{:.9f}".format(loss))
                 if log_file is not None:
-                    log_file.write('On Held_Out: %04d\t%.9f\t%.4f\n' % (epoch, loss, duration / 60.0))
+                    log_file.write('On Held_Out: %04d\t%.9f\t%.4f\n' %
+                                   (epoch, loss, duration / 60.0))
         return stats
 
     def evaluate(self, in_data, configuration, ret_pre_augmentation=False):
@@ -218,12 +271,14 @@ class AutoEncoder(Neural_Net):
         data_loss = 0.
         pre_aug = None
         if self.is_denoising:
-            original_data, ids, feed_data = in_data.full_epoch_data(shuffle=False)
+            original_data, ids, feed_data = in_data.full_epoch_data(
+                shuffle=False)
             if ret_pre_augmentation:
                 pre_aug = feed_data.copy()
             if feed_data is None:
                 feed_data = original_data
-            feed_data = apply_augmentations(feed_data, configuration)  # This is a new copy of the batch.
+            feed_data = apply_augmentations(
+                feed_data, configuration)  # This is a new copy of the batch.
         else:
             original_data, ids, _ = in_data.full_epoch_data(shuffle=False)
             feed_data = apply_augmentations(original_data, configuration)
@@ -232,20 +287,29 @@ class AutoEncoder(Neural_Net):
         reconstructions = np.zeros([n_examples] + self.n_output)
         for i in range(0, n_examples, b):
             if self.is_denoising:
-                reconstructions[i:i + b], loss = self.reconstruct(feed_data[i:i + b], original_data[i:i + b])
+                reconstructions[i:i + b], loss = self.reconstruct(
+                    feed_data[i:i + b], original_data[i:i + b])
             else:
-                reconstructions[i:i + b], loss = self.reconstruct(feed_data[i:i + b])
+                reconstructions[i:i + b], loss = self.reconstruct(
+                    feed_data[i:i + b])
 
             # Compute average loss
             data_loss += (loss * len(reconstructions[i:i + b]))
         data_loss /= float(n_examples)
 
         if pre_aug is not None:
-            return reconstructions, data_loss, np.squeeze(feed_data), ids, np.squeeze(original_data), pre_aug
+            return reconstructions, data_loss, np.squeeze(
+                feed_data), ids, np.squeeze(original_data), pre_aug
         else:
-            return reconstructions, data_loss, np.squeeze(feed_data), ids, np.squeeze(original_data)
-        
-    def embedding_at_tensor(self, dataset, conf, feed_original=True, apply_augmentation=False, tensor_name='bottleneck'):
+            return reconstructions, data_loss, np.squeeze(
+                feed_data), ids, np.squeeze(original_data)
+
+    def embedding_at_tensor(self,
+                            dataset,
+                            conf,
+                            feed_original=True,
+                            apply_augmentation=False,
+                            tensor_name='bottleneck'):
         '''
         Observation: the NN-neighborhoods seem more reasonable when we do not apply the augmentation.
         Observation: the next layer after latent (z) might be something interesting.
@@ -268,16 +332,19 @@ class AutoEncoder(Neural_Net):
         embedding = []
         if tensor_name == 'bottleneck':
             for b in iterate_in_chunks(feed_data, batch_size):
-                embedding.append(self.transform(b.reshape([len(b)] + conf.n_input)))
+                embedding.append(
+                    self.transform(b.reshape([len(b)] + conf.n_input)))
         else:
             embedding_tensor = self.graph.get_tensor_by_name(tensor_name)
             for b in iterate_in_chunks(feed_data, batch_size):
-                codes = self.sess.run(embedding_tensor, feed_dict={self.x: b.reshape([len(b)] + conf.n_input)})
+                codes = self.sess.run(
+                    embedding_tensor,
+                    feed_dict={self.x: b.reshape([len(b)] + conf.n_input)})
                 embedding.append(codes)
 
         embedding = np.vstack(embedding)
         return feed, embedding, ids
-        
+
     def get_latent_codes(self, pclouds, batch_size=100):
         ''' Convenience wrapper of self.transform to get the latent (bottle-neck) codes for a set of input point 
         clouds.

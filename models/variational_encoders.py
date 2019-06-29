@@ -17,10 +17,25 @@ from tflearn.layers.core import fully_connected, dropout
 
 from utils.tf import expand_scope_by_name, replicate_parameter_for_all_layers
 
-def variational_encoder_with_convs_and_symmetry(in_signal, n_filters=[64, 128, 256, 1024], filter_sizes=[1], strides=[1],
-                                        b_norm=True, non_linearity=tf.nn.relu, regularizer=None, weight_decay=0.001,
-                                        symmetry=tf.reduce_max, dropout_prob=None, pool=avg_pool_1d, pool_sizes=None, scope=None,
-                                        reuse=False, padding='same', verbose=False, closing=None, conv_op=conv_1d):
+
+def variational_encoder_with_convs_and_symmetry(in_signal,
+                                                n_filters=[64, 128, 256, 1024],
+                                                filter_sizes=[1],
+                                                strides=[1],
+                                                b_norm=True,
+                                                non_linearity=tf.nn.relu,
+                                                regularizer=None,
+                                                weight_decay=0.001,
+                                                symmetry=tf.reduce_max,
+                                                dropout_prob=None,
+                                                pool=avg_pool_1d,
+                                                pool_sizes=None,
+                                                scope=None,
+                                                reuse=False,
+                                                padding='same',
+                                                verbose=False,
+                                                closing=None,
+                                                conv_op=conv_1d):
     '''An Encoder (recognition network), which maps inputs onto a latent space.
     '''
 
@@ -34,22 +49,40 @@ def variational_encoder_with_convs_and_symmetry(in_signal, n_filters=[64, 128, 2
 
     if n_layers < 2:
         raise ValueError('More than 1 layers are expected.')
-        
+
     def _one_layer(layer, i):
         name = 'encoder_conv_layer_' + str(i)
         scope_i = expand_scope_by_name(scope, name)
-        layer = conv_op(layer, nb_filter=n_filters[i], filter_size=filter_sizes[i], strides=strides[i], regularizer=regularizer,
-                        weight_decay=weight_decay, name=name, reuse=reuse, scope=scope_i, padding=padding)
+        layer = conv_op(layer,
+                        nb_filter=n_filters[i],
+                        filter_size=filter_sizes[i],
+                        strides=strides[i],
+                        regularizer=regularizer,
+                        weight_decay=weight_decay,
+                        name=name,
+                        reuse=reuse,
+                        scope=scope_i,
+                        padding=padding)
 
         if verbose:
-            print(name, 'conv params = ', np.prod(layer.W.get_shape().as_list()) + np.prod(layer.b.get_shape().as_list()), end=' ')
+            print(name,
+                  'conv params = ',
+                  np.prod(layer.W.get_shape().as_list()) +
+                  np.prod(layer.b.get_shape().as_list()),
+                  end=' ')
 
         if b_norm:
             name += '_bnorm'
             scope_i = expand_scope_by_name(scope, name)
-            layer = batch_normalization(layer, name=name, reuse=reuse, scope=scope_i)
+            layer = batch_normalization(layer,
+                                        name=name,
+                                        reuse=reuse,
+                                        scope=scope_i)
             if verbose:
-                print('bnorm params = ', np.prod(layer.beta.get_shape().as_list()) + np.prod(layer.gamma.get_shape().as_list()))
+                print(
+                    'bnorm params = ',
+                    np.prod(layer.beta.get_shape().as_list()) +
+                    np.prod(layer.gamma.get_shape().as_list()))
 
         if non_linearity is not None:
             layer = non_linearity(layer)
@@ -63,15 +96,16 @@ def variational_encoder_with_convs_and_symmetry(in_signal, n_filters=[64, 128, 2
 
         if verbose:
             print(layer)
-            print('output size:', np.prod(layer.get_shape().as_list()[1:]), '\n')
-            
+            print('output size:', np.prod(layer.get_shape().as_list()[1:]),
+                  '\n')
+
         return layer
-    
+
     for i in range(n_layers - 1):
         if i == 0:
             layer = in_signal
         layer = _one_layer(layer, i)
-            
+
     i += 1
     z_mean = _one_layer(layer, i)
     z_std = _one_layer(layer, i)

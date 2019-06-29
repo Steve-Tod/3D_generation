@@ -4,33 +4,72 @@ import numpy as np
 from multiprocessing import Pool
 from utils.ply_utils.plyfile import PlyElement, PlyData
 
-
 snc_synth_id_to_category = {
-    '02691156': 'airplane',  '02773838': 'bag',        '02801938': 'basket',
-    '02808440': 'bathtub',   '02818832': 'bed',        '02828884': 'bench',
-    '02834778': 'bicycle',   '02843684': 'birdhouse',  '02871439': 'bookshelf',
-    '02876657': 'bottle',    '02880940': 'bowl',       '02924116': 'bus',
-    '02933112': 'cabinet',   '02747177': 'can',        '02942699': 'camera',
-    '02954340': 'cap',       '02958343': 'car',        '03001627': 'chair',
-    '03046257': 'clock',     '03207941': 'dishwasher', '03211117': 'monitor',
-    '04379243': 'table',     '04401088': 'telephone',  '02946921': 'tin_can',
-    '04460130': 'tower',     '04468005': 'train',      '03085013': 'keyboard',
-    '03261776': 'earphone',  '03325088': 'faucet',     '03337140': 'file',
-    '03467517': 'guitar',    '03513137': 'helmet',     '03593526': 'jar',
-    '03624134': 'knife',     '03636649': 'lamp',       '03642806': 'laptop',
-    '03691459': 'speaker',   '03710193': 'mailbox',    '03759954': 'microphone',
-    '03761084': 'microwave', '03790512': 'motorcycle', '03797390': 'mug',
-    '03928116': 'piano',     '03938244': 'pillow',     '03948459': 'pistol',
-    '03991062': 'pot',       '04004475': 'printer',    '04074963': 'remote_control',
-    '04090263': 'rifle',     '04099429': 'rocket',     '04225987': 'skateboard',
-    '04256520': 'sofa',      '04330267': 'stove',      '04530566': 'vessel',
-    '04554684': 'washer',    '02858304': 'boat',       '02992529': 'cellphone'
+    '02691156': 'airplane',
+    '02773838': 'bag',
+    '02801938': 'basket',
+    '02808440': 'bathtub',
+    '02818832': 'bed',
+    '02828884': 'bench',
+    '02834778': 'bicycle',
+    '02843684': 'birdhouse',
+    '02871439': 'bookshelf',
+    '02876657': 'bottle',
+    '02880940': 'bowl',
+    '02924116': 'bus',
+    '02933112': 'cabinet',
+    '02747177': 'can',
+    '02942699': 'camera',
+    '02954340': 'cap',
+    '02958343': 'car',
+    '03001627': 'chair',
+    '03046257': 'clock',
+    '03207941': 'dishwasher',
+    '03211117': 'monitor',
+    '04379243': 'table',
+    '04401088': 'telephone',
+    '02946921': 'tin_can',
+    '04460130': 'tower',
+    '04468005': 'train',
+    '03085013': 'keyboard',
+    '03261776': 'earphone',
+    '03325088': 'faucet',
+    '03337140': 'file',
+    '03467517': 'guitar',
+    '03513137': 'helmet',
+    '03593526': 'jar',
+    '03624134': 'knife',
+    '03636649': 'lamp',
+    '03642806': 'laptop',
+    '03691459': 'speaker',
+    '03710193': 'mailbox',
+    '03759954': 'microphone',
+    '03761084': 'microwave',
+    '03790512': 'motorcycle',
+    '03797390': 'mug',
+    '03928116': 'piano',
+    '03938244': 'pillow',
+    '03948459': 'pistol',
+    '03991062': 'pot',
+    '04004475': 'printer',
+    '04074963': 'remote_control',
+    '04090263': 'rifle',
+    '04099429': 'rocket',
+    '04225987': 'skateboard',
+    '04256520': 'sofa',
+    '04330267': 'stove',
+    '04530566': 'vessel',
+    '04554684': 'washer',
+    '02858304': 'boat',
+    '02992529': 'cellphone'
 }
+
 
 def snc_category_to_synth_id():
     d = snc_synth_id_to_category
     inv_map = {v: k for k, v in d.items()}
     return inv_map
+
 
 def files_in_subdirs(top_dir, search_pattern):
     regex = re.compile(search_pattern)
@@ -39,7 +78,8 @@ def files_in_subdirs(top_dir, search_pattern):
             full_name = osp.join(path, name)
             if regex.search(full_name):
                 yield full_name
-                
+
+
 def load_ply(file_name, with_faces=False, with_color=False):
     ply_data = PlyData.read(file_name)
     points = ply_data['vertex']
@@ -72,18 +112,38 @@ def pc_loader(f_name):
     synet_id = tokens[-2]
     return load_ply(f_name), model_id, synet_id
 
-def load_one_class_under_folder(top_dir, class_name, n_threads=20, file_ending='.ply', verbose=False):
+
+def load_one_class_under_folder(top_dir,
+                                class_name,
+                                n_threads=20,
+                                file_ending='.ply',
+                                verbose=False):
     class_dir = osp.join(top_dir, snc_category_to_synth_id()[class_name])
-    return load_all_point_clouds_under_folder(class_dir, n_threads=n_threads, file_ending=file_ending, verbose=verbose)
+    return load_all_point_clouds_under_folder(class_dir,
+                                              n_threads=n_threads,
+                                              file_ending=file_ending,
+                                              verbose=verbose)
 
-def load_all_point_clouds_under_folder(top_dir, n_threads=20, file_ending='.ply', verbose=False):
+
+def load_all_point_clouds_under_folder(top_dir,
+                                       n_threads=20,
+                                       file_ending='.ply',
+                                       verbose=False):
     file_names = [f for f in files_in_subdirs(top_dir, file_ending)]
-    pclouds, model_ids, syn_ids = load_point_clouds_from_filenames(file_names, n_threads, loader=pc_loader, verbose=verbose)
-    return PointCloudDataSet(pclouds, labels=syn_ids + '_' + model_ids, init_shuffle=False)
+    pclouds, model_ids, syn_ids = load_point_clouds_from_filenames(
+        file_names, n_threads, loader=pc_loader, verbose=verbose)
+    return PointCloudDataSet(pclouds,
+                             labels=syn_ids + '_' + model_ids,
+                             init_shuffle=False)
 
-def load_point_clouds_from_filenames(file_names, n_threads, loader, verbose=False):
+
+def load_point_clouds_from_filenames(file_names,
+                                     n_threads,
+                                     loader,
+                                     verbose=False):
     pc = loader(file_names[0])[0]
-    pclouds = np.empty([len(file_names), pc.shape[0], pc.shape[1]], dtype=np.float32)
+    pclouds = np.empty([len(file_names), pc.shape[0], pc.shape[1]],
+                       dtype=np.float32)
     model_names = np.empty([len(file_names)], dtype=object)
     class_ids = np.empty([len(file_names)], dtype=object)
     pool = Pool(n_threads)
@@ -98,7 +158,8 @@ def load_point_clouds_from_filenames(file_names, n_threads, loader, verbose=Fals
         warnings.warn('Point clouds with the same model name were loaded.')
 
     if verbose:
-        print('{0} pclouds were loaded. They belong in {1} shape-classes.'.format(len(pclouds), len(np.unique(class_ids))))
+        print('{0} pclouds were loaded. They belong in {1} shape-classes.'.
+              format(len(pclouds), len(np.unique(class_ids))))
 
     return pclouds, model_names, class_ids
 
@@ -108,7 +169,12 @@ class PointCloudDataSet(object):
     See https://github.com/tensorflow/tensorflow/blob/a5d8217c4ed90041bea2616c14a8ddcf11ec8c03/tensorflow/examples/tutorials/mnist/input_data.py
     '''
 
-    def __init__(self, point_clouds, noise=None, labels=None, copy=True, init_shuffle=True):
+    def __init__(self,
+                 point_clouds,
+                 noise=None,
+                 labels=None,
+                 copy=True,
+                 init_shuffle=True):
         '''Construct a DataSet.
         Args:
             init_shuffle, shuffle data before first epoch has been reached.
@@ -120,7 +186,9 @@ class PointCloudDataSet(object):
         self.n_points = point_clouds.shape[1]
 
         if labels is not None:
-            assert point_clouds.shape[0] == labels.shape[0], ('points.shape: %s labels.shape: %s' % (point_clouds.shape, labels.shape))
+            assert point_clouds.shape[0] == labels.shape[0], (
+                'points.shape: %s labels.shape: %s' %
+                (point_clouds.shape, labels.shape))
             if copy:
                 self.labels = labels.copy()
             else:
@@ -175,7 +243,8 @@ class PointCloudDataSet(object):
         if self.noisy_point_clouds is None:
             return self.point_clouds[start:end], self.labels[start:end], None
         else:
-            return self.point_clouds[start:end], self.labels[start:end], self.noisy_point_clouds[start:end]
+            return self.point_clouds[start:end], self.labels[
+                start:end], self.noisy_point_clouds[start:end]
 
     def full_epoch_data(self, shuffle=True, seed=None):
         '''Returns a copy of the examples of the entire data set (i.e. an epoch's data), shuffled.
@@ -195,15 +264,19 @@ class PointCloudDataSet(object):
     def merge(self, other_data_set):
         self._index_in_epoch = 0
         self.epochs_completed = 0
-        self.point_clouds = np.vstack((self.point_clouds, other_data_set.point_clouds))
+        self.point_clouds = np.vstack(
+            (self.point_clouds, other_data_set.point_clouds))
 
-        labels_1 = self.labels.reshape([self.num_examples, 1])  # TODO = move to init.
-        labels_2 = other_data_set.labels.reshape([other_data_set.num_examples, 1])
+        labels_1 = self.labels.reshape([self.num_examples,
+                                        1])  # TODO = move to init.
+        labels_2 = other_data_set.labels.reshape(
+            [other_data_set.num_examples, 1])
         self.labels = np.vstack((labels_1, labels_2))
         self.labels = np.squeeze(self.labels)
 
         if self.noisy_point_clouds is not None:
-            self.noisy_point_clouds = np.vstack((self.noisy_point_clouds, other_data_set.noisy_point_clouds))
+            self.noisy_point_clouds = np.vstack(
+                (self.noisy_point_clouds, other_data_set.noisy_point_clouds))
 
         self.num_examples = self.point_clouds.shape[0]
 
