@@ -1,0 +1,36 @@
+{
+  "gpu_ids": [1]
+  , "data": {
+      "mode": "table",
+      "norm": true,
+      "name": "naive table",
+      "mu": 1,
+      "sigma": 1,
+      "num_point_d": 1000,
+      "num_point_l": 500,
+      "num_example": 5000,
+      "tweak_weight": 0.05,
+      "num_worker": 4,
+      "noise_dim": 128
+  }
+  , "model": {
+    "type": "wgan"
+    , "num_points": 3000
+    , "noise_dim": 128
+    , "noise_params": {"mu": 0, "sigma": 0.2}
+  }
+  , "train": {
+    "batch_size": 50
+    , "training_epochs": 100
+    , "learning_rate": 0.0001
+    , "beta": 0.5
+    , "z_rotate": false
+    , "saver_step": 10
+    , "loss_display_step": 10
+    , "resume": false
+  }
+  , "path": {
+    "train_root": "./experiments"
+    , "experiment_name": "single_class_gan_chair_noise128"
+  }
+}

@@ -1,5 +1,5 @@
 def Settings(**kwargs):
     return {
         'interpreter_path':
-        '/home/data/private/disk5/stevetod/anaconda3/envs/tf_py2/bin/python'
+        '/orion/u/jiangthu/anaconda3/envs/tf_py3/bin/python'
     }

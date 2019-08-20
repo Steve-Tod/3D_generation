@@ -1,0 +1,29 @@
+{
+  "gpu_ids": [2]
+  , "data": {
+  }
+  , "model": {
+    "type": "wgan"
+    , "num_points": 2048
+    , "noise_dim": 128
+    , "bneck_size": 128
+    , "noise_params": {"mu": 0, "sigma": 0.2}
+  }
+  , "train": {
+    "batch_size": 500
+    , "training_epochs": 100
+    , "learning_rate_d": 0.0005
+    , "learning_rate_g": 0.0005
+    , "beta": 0.5
+    , "z_rotate": false
+    , "saver_step": 10
+    , "loss_display_step": 10
+    , "resume": false
+    , "ae_epoch": 200
+  }
+  , "path": {
+    "train_root": "./experiments"
+    , "experiment_name": "cube_ae_latent_gan"
+    , "ae_config": "../experiments/cube_ae_no_norm_emd/configuration"
+  }
+}

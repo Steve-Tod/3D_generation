@@ -56,3 +56,19 @@ def unpickle_data(path):
     with open(path, 'rb') as f:
         obj = pickle.load(f)
     return obj
+
+def pc2txt(pc):
+    assert len(pc.shape) == 2 and 3 in pc.shape
+    if pc.shape[0] == 3:
+        pc = np.transpose(pc)
+    lines = []
+    for i in range(pc.shape[0]):
+        lines.append(' '.join([str(x) for x in pc[i]]))
+    txt = '\n'.join(lines)
+    return txt
+
+def save_pc_as_txt(path, pc):
+    txt = pc2txt(pc)
+    with open(path, 'w') as f:
+        f.write(txt)
+        

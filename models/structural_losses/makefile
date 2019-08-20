@@ -1,8 +1,7 @@
-nvcc = /usr/local/cuda-10.0/bin/nvcc
-cudalib = /usr/local/cuda-10.0/lib64
-tensorflow = /home/data/private/disk5/stevetod/anaconda3/envs/tf_py2/lib/python2.7/site-packages/tensorflow/include
-TF_LIB = /home/data/private/disk5/stevetod/anaconda3/envs/tf_py2/lib/python2.7/site-packages/tensorflow
-
+nvcc = /usr/local/cuda-9.0/bin/nvcc
+cudalib = /usr/local/cuda-9.0/lib64
+tensorflow = /orion/u/jiangthu/anaconda3/envs/tf_py3/lib/python3.6/site-packages/tensorflow/include
+TF_LIB = /orion/u/jiangthu/anaconda3/envs/tf_py3/lib/python3.6/site-packages/tensorflow
 all: tf_approxmatch_so.so tf_approxmatch_g.cu.o tf_nndistance_so.so tf_nndistance_g.cu.o
 
 

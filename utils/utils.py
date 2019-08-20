@@ -20,7 +20,7 @@ def iterate_in_chunks(l, n):
     '''Yield successive 'n'-sized chunks from iterable 'l'.
     Note: last chunk will be smaller than l if n doesn't divide l perfectly.
     '''
-    for i in xrange(0, len(l), n):
+    for i in range(0, len(l), n):
         yield l[i:i + n]
 
 
@@ -29,7 +29,6 @@ def add_gaussian_noise_to_pcloud(pcloud, mu=0, sigma=1):
     gnoise = np.tile(gnoise, (3, 1)).T
     pcloud += gnoise
     return pcloud
-
 
 def apply_augmentations(batch, conf):
     if conf.gauss_augment is not None or conf.z_rotate:
@@ -50,7 +49,26 @@ def apply_augmentations(batch, conf):
         batch = batch.dot(r_rotation)
     return batch
 
+def unit_cube_grid_point_cloud(resolution, clip_sphere=False):
+    '''Returns the center coordinates of each cell of a 3D grid with resolution^3 cells,
+    that is placed in the unit-cube.
+    If clip_sphere it True it drops the "corner" cells that lie outside the unit-sphere.
+    '''
+    grid = np.ndarray((resolution, resolution, resolution, 3), np.float32)
+    spacing = 1.0 / float(resolution - 1)
+    for i in range(resolution):
+        for j in range(resolution):
+            for k in range(resolution):
+                grid[i, j, k, 0] = i * spacing - 0.5
+                grid[i, j, k, 1] = j * spacing - 0.5
+                grid[i, j, k, 2] = k * spacing - 0.5
 
+    if clip_sphere:
+        grid = grid.reshape(-1, 3)
+        grid = grid[norm(grid, axis=1) <= 0.5]
+
+    return grid, spacing
+        
 def rand_rotation_matrix(deflection=1.0, seed=None):
     '''Creates a random rotation matrix.
 
@@ -89,6 +107,16 @@ def rand_rotation_matrix(deflection=1.0, seed=None):
     M = (np.outer(V, V) - np.eye(3)).dot(R)
     return M
 
+def plot_mat(cov, ax=None):
+    return_fig = False
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        return_fig = True
+    ax.imshow(cov, interpolation='nearest', cmap=plt.cm.RdBu_r)
+    
+    if return_fig:
+        return fig
 
 def plot_3d_point_cloud(x,
                         y,
@@ -125,10 +153,10 @@ def plot_3d_point_cloud(x,
         ax.set_ylim3d(-0.5, 0.5)
         ax.set_zlim3d(-0.5, 0.5)
     else:
-        miv = 0.7 * np.min([np.min(x), np.min(y),
+        miv = 1.3 * np.min([np.min(x), np.min(y),
                             np.min(z)
                             ])  # Multiply with 0.7 to squeeze free-space.
-        mav = 0.7 * np.max([np.max(x), np.max(y), np.max(z)])
+        mav = 1.3 * np.max([np.max(x), np.max(y), np.max(z)])
         ax.set_xlim(miv, mav)
         ax.set_ylim(miv, mav)
         ax.set_zlim(miv, mav)

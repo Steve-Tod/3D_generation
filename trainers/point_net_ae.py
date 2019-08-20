@@ -35,7 +35,7 @@ class PointNetAutoEncoder(AutoEncoder):
 
         AutoEncoder.__init__(self, name, graph, configuration)
 
-        with tf.variable_scope(name):
+        with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
             self.z = c.encoder(self.x, **c.encoder_args)
             self.bottleneck_size = int(self.z.get_shape()[1])
             layer = c.decoder(self.z, **c.decoder_args)
@@ -95,6 +95,9 @@ class PointNetAutoEncoder(AutoEncoder):
 
         for rl in reg_losses:
             self.loss += (w_reg_alpha * rl)
+
+        with tf.name_scope('performance'):
+            tf.summary.scalar('recon_loss', self.loss)
 
     def _setup_optimizer(self):
         c = self.configuration

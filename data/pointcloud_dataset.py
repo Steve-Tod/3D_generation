@@ -117,24 +117,28 @@ def load_one_class_under_folder(top_dir,
                                 class_name,
                                 n_threads=20,
                                 file_ending='.ply',
-                                verbose=False):
+                                verbose=False,
+                                test_num=0):
     class_dir = osp.join(top_dir, snc_category_to_synth_id()[class_name])
     return load_all_point_clouds_under_folder(class_dir,
                                               n_threads=n_threads,
                                               file_ending=file_ending,
-                                              verbose=verbose)
+                                              verbose=verbose,
+                                              test_num=test_num)
 
 
 def load_all_point_clouds_under_folder(top_dir,
                                        n_threads=20,
                                        file_ending='.ply',
-                                       verbose=False):
+                                       verbose=False,
+                                       test_num=0):
     file_names = [f for f in files_in_subdirs(top_dir, file_ending)]
     pclouds, model_ids, syn_ids = load_point_clouds_from_filenames(
         file_names, n_threads, loader=pc_loader, verbose=verbose)
     return PointCloudDataSet(pclouds,
                              labels=syn_ids + '_' + model_ids,
-                             init_shuffle=False)
+                             init_shuffle=False,
+                             test_num=test_num)
 
 
 def load_point_clouds_from_filenames(file_names,
@@ -174,16 +178,29 @@ class PointCloudDataSet(object):
                  noise=None,
                  labels=None,
                  copy=True,
-                 init_shuffle=True):
+                 init_shuffle=True,
+                 test_num=0):
         '''Construct a DataSet.
         Args:
             init_shuffle, shuffle data before first epoch has been reached.
         Output:
             original_pclouds, labels, (None or Feed) # TODO Rename
         '''
-
-        self.num_examples = point_clouds.shape[0]
-        self.n_points = point_clouds.shape[1]
+        if copy:
+            if test_num == 0:
+                self.point_clouds = point_clouds.copy()
+            else:
+                self.point_clouds = point_clouds.copy()[:-test_num]
+                self.point_clouds_test = point_clouds.copy()[-test_num:]
+        else:
+            if test_num == 0:
+                self.point_clouds = point_clouds
+            else:
+                self.point_clouds = point_clouds[:-test_num]
+                self.point_clouds_test = point_clouds[-test_num:]
+                
+        self.num_examples = self.point_clouds.shape[0]
+        self.n_points = self.point_clouds.shape[1]
 
         if labels is not None:
             assert point_clouds.shape[0] == labels.shape[0], (
@@ -205,11 +222,6 @@ class PointCloudDataSet(object):
                 self.noisy_point_clouds = noise
         else:
             self.noisy_point_clouds = None
-
-        if copy:
-            self.point_clouds = point_clouds.copy()
-        else:
-            self.point_clouds = point_clouds
 
         self.epochs_completed = 0
         self._index_in_epoch = 0
@@ -281,3 +293,5 @@ class PointCloudDataSet(object):
         self.num_examples = self.point_clouds.shape[0]
 
         return self
+    
+    

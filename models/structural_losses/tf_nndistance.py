@@ -76,7 +76,7 @@ if __name__ == '__main__':
         #grads=compute_gradient([inp1,inp2],[(16,32,3),(16,32,3)],loss,(1,),[xyz1,xyz2])
         #for i,j in grads:
         #print i.shape,j.shape,np.mean(np.abs(i-j)),np.mean(np.abs(i)),np.mean(np.abs(j))
-        #for i in xrange(10):
+        #for i in range(10):
         #t0=time.time()
         #a,b,c,d=sess.run([reta,retb,retc,retd],feed_dict={inp1:xyz1,inp2:xyz2})
         #print 'time',time.time()-t0

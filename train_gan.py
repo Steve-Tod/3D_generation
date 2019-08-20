@@ -2,7 +2,7 @@ import os
 import argparse, json
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='params for ae training')
+    parser = argparse.ArgumentParser(description='params for gan training')
     parser.add_argument('-o', '--opt', type=str, required=True)
     args = parser.parse_args()
 
@@ -14,16 +14,14 @@ if __name__ == '__main__':
 
     import os.path as osp
     from data.pointcloud_dataset import load_one_class_under_folder
-    from trainers.autoencoder import default_train_params, Configuration
+    from models.generators_discriminators import point_cloud_generator, mlp_discriminator, leaky_relu
     from utils.dirs import mkdir_and_rename
     from utils.tf import reset_tf_graph
 
-    if opt['model']['type'] == 'ae':
-        from models.ae_models import mlp_architecture_ala_iclr_18 as ae_arch
-        from trainers.point_net_ae import PointNetAutoEncoder as PAE
-    elif opt['model']['type'] == 'vae':
-        from models.vae_models import mlp_architecture_ala_iclr_18 as ae_arch
-        from trainers.point_net_vae import PointNetVariationalAutoEncoder as PAE
+    if opt['model']['type'] == 'vanilla_gan':
+        from trainers.vanilla_gan import Vanilla_GAN as PGAN
+    elif opt['model']['type'] == 'wgan':
+        from trainers.w_gan_gp import W_GAN_GP as PGAN
     else:
         raise NotImplementedError('model type %s not implemented!' %
                                   opt['model']['type'])
@@ -34,8 +32,8 @@ if __name__ == '__main__':
                                              verbose=True)
 
     # model
-    encoder, decoder, enc_args, dec_args = ae_arch(opt['model']['num_points'],
-                                                   opt['model']['bneck_size'])
+    discriminator = mlp_discriminator
+    generator = point_cloud_generator
 
     # path and trainer
     train_dir = osp.join(opt['path']['train_root'],
@@ -47,8 +45,7 @@ if __name__ == '__main__':
         ae = PAE(conf.experiment_name, conf)
         ae.restore_model(conf.save_dir, epoch=train_params['restore_epoch'])
     else:
-        mkdir_and_rename(train_dir)
-        os.mkdir(osp.join(train_dir, 'checkpoint'))
+        mkdir_and_rename(osp.join(train_dir, 'checkpoint'))
         with open(osp.join(train_dir, 'opt.json'), 'w') as f:
             json.dump(opt, f, indent=4)
         conf = Configuration(

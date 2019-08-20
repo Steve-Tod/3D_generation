@@ -1,29 +1,31 @@
 {
-  "gpu_ids": [2]
+  "gpu_ids": [0]
   , "data": {
     "data_root": "/orion/u/jiangthu/projects/latent_3d_points/data/shape_net_core_uniform_samples_2048"
     , "class_name": "chair"
     , "n_thread": 20
   }
   , "model": {
-    "type": "ae"
+    "type": "vanilla_gan"
     , "num_points": 2048
+    , "noise_dim": 128
     , "bneck_size": 128
+    , "noise_params": {"mu": 0, "sigma": 0.2}
   }
   , "train": {
-    "ae_loss": "chamfer"
-    , "batch_size": 400
-    , "training_epochs": 800
-    , "denoising": false
+    "batch_size": 1000
+    , "training_epochs": 500
     , "learning_rate": 0.0005
+    , "beta": 0.5
     , "z_rotate": false
-    , "saver_step": 10
+    , "saver_step": 50
     , "loss_display_step": 10
     , "resume": false
-    , "restore_epoch": 500
+    , "ae_epoch": 800
   }
   , "path": {
     "train_root": "./experiments"
-    , "experiment_name": "single_class_ae"
+    , "experiment_name": "single_class_latent_gan_chair_noise128"
+    , "ae_config": "./experiments/single_class_ae/configuration"
   }
 }
